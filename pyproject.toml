@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wmts2mbtiles"
-version = "0.1.0"
+version = "0.1.1"
 description = "Fonds de carte en MBTiles à partir d'un service de tuiles WMTS ou XYZ (lidar2map, hike2gpx)"
 readme = "README.md"
 # Comme nico579-commons et gpx2elev : expression SPDX (PEP 639).
