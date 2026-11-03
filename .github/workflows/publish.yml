@@ -25,8 +25,12 @@ jobs:
         run: |
           version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
           test "v$version" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME, version $version"; exit 1; }
+      # Comme ci.yml : les dépendances, et le paquet pris dans src/. Copié du
+      # commun sans cela, le tag v0.1.0 n'a rien publié (paquet introuvable).
+      - name: Dépendances
+        run: python -m pip install --quiet "nico579-commons>=0.5,<1" Pillow
       - name: Tests
-        run: python -m unittest discover -s tests -v
+        run: PYTHONPATH=src python -m unittest discover -s tests -v
       - name: Construction
         run: |
           python -m pip install --quiet build
