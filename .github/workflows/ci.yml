@@ -1,0 +1,53 @@
+name: CI
+
+# Tests sans réseau : un faux service de tuiles rend des images, le reste est
+# le vrai code. Python 3.8 en plus, que lidar2map prend encore en charge.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: ruff (pyflakes)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff check .
+
+  test:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.12"]
+        include:
+          - os: ubuntu-latest
+            python: "3.8"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+      # Les dépendances seules : setuptools 77, qui lit la licence SPDX, ne
+      # construit pas sous 3.8 ; le paquet est pris dans src/.
+      - name: Dépendances
+        run: python -m pip install --quiet "nico579-commons>=0.5,<1" Pillow
+      - name: Tests
+        shell: bash
+        run: PYTHONPATH=src python -m unittest discover -s tests -v
+      - name: Construction du paquet
+        if: matrix.python != '3.8'
+        run: |
+          python -m pip install --quiet build
+          python -m build
